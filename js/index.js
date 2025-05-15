@@ -1,6 +1,6 @@
 // Configuration
 const API_CONFIG = {
-    apiKey: "xxxx",
+    apiKey: "YjM2MWIzMmJlZDVjNDE5MjljNDc5MmIwNDA5OGM5MWUtMTc0NzI3ODEzMA==",
     serverUrl: "https://api.heygen.com",
 };
 
@@ -15,6 +15,9 @@ let sessionToken = null;
 const statusElement = document.getElementById("status");
 const mediaElement = document.getElementById("mediaElement");
 const avatarID = document.getElementById("avatarID");
+const avatarImage = document.getElementById("avatarImage");
+const avatarLoading = document.getElementById("avatarLoading");
+const avatarStatusText = document.getElementById("avatarStatusText");
 const voiceID = document.getElementById("voiceID");
 const taskInput = document.getElementById("taskInput");
 
@@ -60,9 +63,22 @@ async function connectWebSocket(sessionId) {
 
     // Handle WebSocket events
     webSocket.addEventListener("message", (event) => {
-        const eventData = JSON.parse(event.data);
-        console.log("Raw WebSocket event:", eventData);
-    });
+    const eventData = JSON.parse(event.data);
+    console.log("Raw WebSocket event:", eventData);
+
+    // Nếu là phản hồi từ avatar
+    if (eventData.event === "chat_response" && eventData.text) {
+        updateStatus(`🤖 Avatar: ${eventData.text}`);
+        displayAvatarResponse(eventData.text);
+        setAvatarStatus(null); // Avatar đã nói xong
+    }
+});
+
+}
+
+function displayAvatarResponse(text) {
+    const responseText = document.getElementById("responseText");
+    responseText.textContent = `🤖 ${text}`;
 }
 
 // Create new session
@@ -148,6 +164,24 @@ async function createNewSession() {
     await connectWebSocket(sessionInfo.session_id);
 
     updateStatus("Session created successfully");
+    avatarLoading.style.display = "none";
+avatarImage.style.display = "block";
+setAvatarStatus("idle");
+
+}
+// Set avatar status
+function setAvatarStatus(status) {
+    if (!avatarStatusText) return;
+
+    if (status === "talking") {
+        avatarStatusText.textContent = "🗣️ Đang trả lời...";
+        avatarStatusText.style.display = "block";
+    } else if (status === "listening") {
+        avatarStatusText.textContent = "👂 Đang nghe bạn...";
+        avatarStatusText.style.display = "block";
+    } else {
+        avatarStatusText.style.display = "none";
+    }
 }
 
 // Start listening
@@ -158,15 +192,15 @@ function startListening() {
     recognition.interimResults = false;
     recognition.maxAlternatives = 1;
 
-    recognition.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
-        document.getElementById(
-            "transcript"
-        ).textContent = `🗣️ Bạn nói: "${transcript}"`;
-        if (transcript) {
-            sendText(transcript, "talk");
-        }
-    };
+recognition.onresult = (event) => {
+    const transcript = event.results[0][0].transcript;
+    document.getElementById("transcript").textContent = `🗣️ Bạn nói: "${transcript}"`;
+    if (transcript) {
+        setAvatarStatus("talking");
+        sendText(transcript, "talk");
+    }
+};
+
 
     recognition.onerror = (event) => {
         alert("Lỗi nhận diện giọng nói: " + event.error);
@@ -222,7 +256,20 @@ async function sendText(text, taskType = "talk") {
     );
 
     updateStatus(`Sent text (${taskType}): ${text}`);
+setAvatarStatus("talking");
+
 }
+
+function sendTextFromInput() {
+    const input = document.getElementById("textMessageInput");
+    const message = input.value.trim();
+    if (message) {
+        sendText(message, "talk");
+        input.value = "";
+        setAvatarStatus("talking");
+    }
+}
+
 
 // Close session
 async function closeSession() {
@@ -260,6 +307,9 @@ async function closeSession() {
     mediaStream = null;
     sessionToken = null;
     document.querySelector("#startBtn").disabled = false;
+avatarImage.style.display = "none";
+avatarLoading.style.display = "block";
+setAvatarStatus(null);
 
     updateStatus("Session closed");
 }

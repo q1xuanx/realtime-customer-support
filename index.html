@@ -1,45 +1,135 @@
 <!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <title>HeyGen Streaming API LiveKit (V2)</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
+<html lang="vi">
+  <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-</head>
+    <title>HDBank - Hỗ trợ Video Call</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ["Inter", "sans-serif"],
+            },
+            colors: {
+              hdbank: {
+                red: "#ed1c24",
+                yellow: "#f9b233",
+              },
+            },
+          },
+        },
+      };
+    </script>
 
-<body class="bg-gray-100 p-5 font-sans">
-    <div class="max-w-3xl mx-auto bg-white p-5 rounded-lg shadow-md">
-        <div class="flex flex-wrap gap-2.5 mb-5">
-            <input id="avatarID" type="text" placeholder="Avatar ID" value="Pedro_ProfessionalLook2_public"
-                class="flex-1 min-w-[200px] p-2 border border-gray-300 rounded-md" hidden="true" />
-            <input id="voiceID" type="text" placeholder="Voice ID"
-                class="flex-1 min-w-[200px] p-2 border border-gray-300 rounded-md"
-                value="c6fb81520dcd42e0a02be231046a8639" hidden="true" />
-            <button id="startBtn"
-                class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                Start
-            </button>
-            <button id="closeBtn" class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors">
-                Close
-            </button>
-        </div>
-        <div class="flex flex-wrap gap-2.5 mb-5">
-            <input id="taskInput" hidden />
-            <button onclick="startListening()" class="p-2 bg-blue-500 text-white rounded-md">
-                🎤 Nhấn để nói
-            </button>
-            <span id="transcript" class="ms-3 text-muted"></span>
-        </div>
+  </head>
 
-        <video id="mediaElement" class="w-full max-h-[400px] border rounded-lg my-5" autoplay></video>
-        <div id="status"
-            class="p-2.5 bg-gray-50 border border-gray-300 rounded-md h-[100px] overflow-y-auto font-mono text-sm">
-        </div>
+  <body class="bg-gray-100 p-6 font-sans">
+    <div
+      class="max-w-3xl mx-auto bg-white p-6 rounded-2xl shadow-xl border border-gray-200"
+    >
+      <!-- Header -->
+      <div class="mb-6 border-b pb-4">
+        <h1 class="text-2xl font-semibold text-hdbank-red">
+          <img
+            src="https://pinetree.vn/wp-content/uploads/2024/07/logohdbank-800x425-1.jpg"
+          />l
+        </h1>
+        <p class="text-sm text-gray-500">
+          Chào mừng quý khách đến với dịch vụ hỗ trợ qua video call của HDBank.
+        </p>
+      </div>
+
+      <!-- Controls -->
+      <div class="flex flex-wrap gap-3 items-center mb-5">
+        <input
+          id="avatarID"
+          type="text"
+          value="Silas_CustomerSupport_public"
+          hidden
+        />
+        <input
+          id="voiceID"
+          type="text"
+          value="c6fb81520dcd42e0a02be231046a8639"
+          hidden
+        />
+
+        <button
+          id="startBtn"
+          class="px-4 py-2 bg-hdbank-red text-white font-medium rounded-md hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          ▶️ Bắt đầu
+        </button>
+        <button
+          id="closeBtn"
+          class="px-4 py-2 bg-gray-300 text-gray-800 font-medium rounded-md hover:bg-gray-400 transition-colors"
+        >
+          ❌ Kết thúc
+        </button>
+      </div>
+
+      <!-- Microphone and Transcript -->
+      <div class="flex items-center gap-3 mb-5">
+        <input id="taskInput" hidden />
+        <button
+          onclick="startListening()"
+          class="w-12 h-12 flex items-center justify-center bg-hdbank-yellow text-white rounded-full shadow hover:scale-105 transition-transform"
+        >
+          🎤
+        </button>
+        <span id="transcript" class="text-gray-600 text-sm italic"></span>
+      <span id="responseText" class="text-gray-800 mt-2 text-base font-medium"></span>
+
     </div>
 
-    <script src="/js/index.js"></script>
-</body>
 
+      <!-- Video -->
+      <video
+        id="mediaElement"
+        class="w-full max-h-[400px] border border-hdbank-red rounded-xl shadow-md mb-5 bg-black"
+        autoplay
+        playsinline
+      ></video>
+
+      <!-- Status box -->
+      <div
+        id="status"
+        class="p-3 bg-gray-50 border border-gray-300 rounded-lg h-[120px] overflow-y-auto font-mono text-sm"
+      ></div>
+    </div>
+<!-- Avatar hiển thị góc phải -->
+<div id="avatarDisplay" class="fixed bottom-6 right-6 w-28 h-28 bg-white rounded-full border-2 border-hdbank-red flex items-center justify-center shadow-xl z-50">
+  <img id="avatarImage" src="https://cdn-icons-png.flaticon.com/512/2922/2922561.png" class="w-full h-full object-cover rounded-full hidden" />
+  <div id="avatarLoading" class="loader border-t-4 border-hdbank-red border-solid rounded-full w-10 h-10 animate-spin"></div>
+  <div id="avatarStatusText" class="absolute bottom-[-24px] w-full text-center text-sm text-hdbank-red font-semibold hidden">
+    🔊 Đang nói...
+  </div>
+</div>
+
+<!-- Gửi text -->
+<div class="flex gap-2 items-center mb-5 mt-3">
+  <input type="text" id="textMessageInput" placeholder="Nhập câu hỏi của bạn..." class="flex-1 p-2 border rounded-md" />
+  <button onclick="sendTextFromInput()" class="px-3 py-2 bg-hdbank-red text-white rounded-md">📨 Gửi</button>
+</div>
+
+<style>
+  .loader {
+    border-width: 4px;
+    border-color: #ed1c24 transparent transparent transparent;
+  }
+
+  #avatarDisplay {
+    position: relative;
+  }
+</style>
+
+    <script src="/js/index.js"></script>
+  </body>
 </html>
